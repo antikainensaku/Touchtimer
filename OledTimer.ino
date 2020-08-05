@@ -143,7 +143,7 @@ void SM_timer() {
         t_0_timer = millis();
         state_timer = 3;
       }
-      if (release_s1 == 1 && release_s2 == 1) {   // if both buttons have been released, goes to case 2 (the timer starts)
+      if (release_s1 >= 1 && release_s2 >= 1) {   // if both buttons have been released, goes to case 2 (the timer starts)
         state_timer = 2;
       }
     break;
