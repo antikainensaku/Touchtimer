@@ -65,22 +65,22 @@ void SM_s1() {
     break;
 
     case 1:     // start
-      value_s1 = digitalRead(pin_s1);
-      if (value_s1 == LOW) {state_s1 = 2;}
+      value_s1 = digitalRead(pin_s1); 
+      if (value_s1 == LOW) {state_s1 = 2;}    // checks if the switch is pressed (LOW)
     break;
 
     case 2:     // debounce start time
-      t_0_s1 = millis();
+      t_0_s1 = millis();                      // milliseconds timestamp saved to t_0_s1
       state_s1 = 3;
     break;
 
     case 3:     // debounce check
       value_s1 = digitalRead(pin_s1);
-      t_s1 = millis();
+      t_s1 = millis();                        // second timestamp saved to t_s1
 
-      if (value_s1 == HIGH) {state_s1 = 0;}
-      if (t_s1 - t_0_s1 > bounce_delay) {
-        state_s1 = 5;
+      if (value_s1 == HIGH) {state_s1 = 0;}   // going back to case 0 (reset) if button is depressed
+      if (t_s1 - t_0_s1 > bounce_delay) {     // moving to case 5 (button armed) if the switch state
+        state_s1 = 5;                         // stays pressed (LOW) for longer than the bounce_delay (5ms)
       }
     break;
 
@@ -90,7 +90,7 @@ void SM_s1() {
 
     case 5:     // armed
       value_s1 = digitalRead(pin_s1);
-      if (value_s1 == HIGH) {state_s1 = 4;}
+      if (value_s1 == HIGH) {state_s1 = 4;}   // if the switch state changes to not pressed (HIGH) going to case 4 (button released)
   }
 }
 
@@ -102,31 +102,31 @@ void SM_s2() {
 
     case 1:     // start
       value_s2 = digitalRead(pin_s2);
-      if (value_s2 == LOW) {state_s2 = 2;}
+      if (value_s2 == LOW) {state_s2 = 2;}    // checks if the switch is pressed (LOW)
     break;
 
-    case 2:     // go
-      t_0_s2 = millis();
+    case 2:     // debounce start time
+      t_0_s2 = millis();                      // milliseconds timestamp saved to t_0_s1
       state_s2 = 3;
     break;
 
-    case 3:     // wait
+    case 3:     // debounce check
       value_s2 = digitalRead(pin_s2);
-      t_s2 = millis();
+      t_s2 = millis();                        // second timestamp saved to t_s1
 
-      if (value_s2 == HIGH) {state_s2 = 0;}
-      if (t_s2 - t_0_s2 > bounce_delay) {
-        state_s2 = 5;
+      if (value_s2 == HIGH) {state_s2 = 0;}   // going back to case 0 (reset) if button is depressed
+      if (t_s2 - t_0_s2 > bounce_delay) {     // moving to case 5 (button armed) if the switch state
+        state_s2 = 5;                         // stays pressed (LOW) for longer than the bounce_delay (5ms)
       }
     break;
 
-    case 4:     // pressed
+    case 4:     // released
       state_s2 = 0;
     break;
 
     case 5:     // armed
       value_s2 = digitalRead(pin_s2);
-      if (value_s2 == HIGH) {state_s2 = 4;}
+      if (value_s2 == HIGH) {state_s2 = 4;}   // if the switch state changes to not pressed (HIGH) going to case 4 (button released)
   }
 }
 
@@ -197,6 +197,14 @@ void SM_timer() {
 
     case 7:     // show end result
       value_reset_s = digitalRead(pin_reset_s);
-      while (value_reset_s == HIGH) {}
+      if (value_reset_s == HIGH) {}                   // does nothing (stops time and shows it on display)
+      if (value_reset_s == LOW) {state_timer = 8;}    // going to case 8 (reset to 0) when reset button is pressed (LOW)
+    break;
+
+    case 8:     // reset to 0
+      release_s1 = 0;
+      release_s2 = 0;                             // setting button release counters to 0 for switch 1 & 2
+      state_timer = 0;
+    break;
   }
 }
