@@ -141,7 +141,14 @@ void SM_timer() {
       if (release_s1 <= 0 || release_s2 <= 0) {   // if one (or both) of the buttons haven't been released, timer displays 00:00;00
         time = 0;
         t_0_timer = millis();
-        state_timer = 3;
+        if (state_s1 == 5 || state_s2 == 5) {
+          state_timer = 3;
+        }
+        if (state_s1 != 5 && state_s2 != 5) {     // if both of the buttons are depressed (or one of them just released)
+          release_s1 = 0;                         // release counter for switch 1 & 2 is changed to 0
+          release_s2 = 0;
+          state_timer = 3;
+        }
       }
       if (release_s1 >= 1 && release_s2 >= 1) {   // if both buttons have been released, goes to case 2 (the timer starts)
         state_timer = 2;
