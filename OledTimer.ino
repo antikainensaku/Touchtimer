@@ -2,26 +2,27 @@
 #include <U8g2lib.h>
 #include <SPI.h>
 #include <Wire.h>
+#include <CapacitiveSensor.h>
 
 U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0);     // setting up correct display for u8g2 library
 
 // variables for reset switch
-int pin_reset_s = 4;
+const int pin_reset_s = 4;
 int value_reset_s = 0;
 
 // statemachine variables for switch 1
+CapacitiveSensor cap_s1 = CapacitiveSensor(5,6);
 int state_s1 = 0;
-int pin_s1 = 2;
-int value_s1 = 0;
 int release_s1 = 0;
+long value_s1 = 0;
 unsigned long t_s1 = 0;
 unsigned long t_0_s1 = 0;
 
 // statemachine variables for switch 2
+CapacitiveSensor cap_s2 = CapacitiveSensor(8,7);
 int state_s2 = 0;
-int pin_s2 = 3;
-int value_s2 = 0;
 int release_s2 = 0;
+long value_s2 = 0;
 unsigned long t_s2 = 0;
 unsigned long t_0_s2 = 0;
 
@@ -35,14 +36,13 @@ unsigned long t_timer = 0;
 unsigned long t_0_timer = 0;
 
 // other variables
-unsigned long bounce_delay = 5;   // debounce time in milliseconds
+const unsigned long debounce_time = 5;   // debounce time in milliseconds
+const long switch_limit = 500;           // value for capacitive sensor reading low vs high
 
 void setup() {
   Serial.begin(9600);
   u8g2.begin();
   u8g2.setFont(u8g2_font_logisoso32_tr);
-  pinMode(pin_s1, INPUT_PULLUP);
-  pinMode(pin_s2, INPUT_PULLUP);
   pinMode(pin_reset_s, INPUT_PULLUP);
 }
 
@@ -64,9 +64,11 @@ void SM_s1() {
       state_s1 = 1;
     break;
 
-    case 1:     // start
-      value_s1 = digitalRead(pin_s1); 
-      if (value_s1 == LOW) {state_s1 = 2;}    // checks if the switch is pressed (LOW)
+    case 1:     // start 
+      value_s1 = cap_s1.capacitiveSensor(30);
+      if (value_s1 > switch_limit) {
+        Serial.println("S1 touched");
+        state_s1 = 2;}    // checks if the switch is pressed (LOW)
     break;
 
     case 2:     // debounce start time
@@ -75,12 +77,12 @@ void SM_s1() {
     break;
 
     case 3:     // debounce check
-      value_s1 = digitalRead(pin_s1);
+      value_s1 = cap_s1.capacitiveSensor(30);
       t_s1 = millis();                        // second timestamp saved to t_s1
 
-      if (value_s1 == HIGH) {state_s1 = 0;}   // going back to case 0 (reset) if button is depressed
-      if (t_s1 - t_0_s1 > bounce_delay) {     // moving to case 5 (button armed) if the switch state
-        state_s1 = 5;                         // stays pressed (LOW) for longer than the bounce_delay (5ms)
+      if (value_s1 < switch_limit) {state_s1 = 0;}   // going back to case 0 (reset) if button is depressed
+      if (t_s1 - t_0_s1 > debounce_time) {     // moving to case 5 (button armed) if the switch state
+        state_s1 = 5;                         // stays pressed (LOW) for longer than the debounce_time (5ms)
       }
     break;
 
@@ -89,8 +91,8 @@ void SM_s1() {
     break;
 
     case 5:     // armed
-      value_s1 = digitalRead(pin_s1);
-      if (value_s1 == HIGH) {state_s1 = 4;}   // if the switch state changes to not pressed (HIGH) going to case 4 (button released)
+      value_s1 = cap_s1.capacitiveSensor(30);
+      if (value_s1 < switch_limit) {state_s1 = 4;}   // if the switch state changes to not pressed (HIGH) going to case 4 (button released)
   }
 }
 
@@ -101,8 +103,10 @@ void SM_s2() {
     break;
 
     case 1:     // start
-      value_s2 = digitalRead(pin_s2);
-      if (value_s2 == LOW) {state_s2 = 2;}    // checks if the switch is pressed (LOW)
+      value_s2 = cap_s2.capacitiveSensor(30);
+      if (value_s2 > switch_limit) {
+        Serial.println("S2 touched");
+        state_s2 = 2;}    // checks if the switch is pressed (LOW)
     break;
 
     case 2:     // debounce start time
@@ -111,12 +115,12 @@ void SM_s2() {
     break;
 
     case 3:     // debounce check
-      value_s2 = digitalRead(pin_s2);
+      value_s2 = cap_s2.capacitiveSensor(30);
       t_s2 = millis();                        // second timestamp saved to t_s1
 
-      if (value_s2 == HIGH) {state_s2 = 0;}   // going back to case 0 (reset) if button is depressed
-      if (t_s2 - t_0_s2 > bounce_delay) {     // moving to case 5 (button armed) if the switch state
-        state_s2 = 5;                         // stays pressed (LOW) for longer than the bounce_delay (5ms)
+      if (value_s2 < switch_limit) {state_s2 = 0;}   // going back to case 0 (reset) if button is depressed
+      if (t_s2 - t_0_s2 > debounce_time) {     // moving to case 5 (button armed) if the switch state
+        state_s2 = 5;                         // stays pressed (LOW) for longer than the debounce_time (5ms)
       }
     break;
 
@@ -125,8 +129,8 @@ void SM_s2() {
     break;
 
     case 5:     // armed
-      value_s2 = digitalRead(pin_s2);
-      if (value_s2 == HIGH) {state_s2 = 4;}   // if the switch state changes to not pressed (HIGH) going to case 4 (button released)
+      value_s2 = cap_s2.capacitiveSensor(30);
+      if (value_s2 < switch_limit) {state_s2 = 4;}   // if the switch state changes to not pressed (HIGH) going to case 4 (button released)
   }
 }
 
